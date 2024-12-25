@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const express = require("express");
@@ -38,12 +38,20 @@ async function run() {
 
     // get tutors by category
     app.get("/findTutors/:category", async (req, res) => {
-        const category = req.params.category;
-        query = {language: category};
-        const result = await tutorialCollection.find(query).toArray();
-        console.log(result);
-        res.send(result);
-    })
+      const category = req.params.category;
+      query = { language: category };
+      const result = await tutorialCollection.find(query).toArray();
+      console.log(result);
+      res.send(result);
+    });
+
+    // get tutor details
+    app.get("/tutor/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await tutorialCollection.findOne(query);
+      res.send(result);
+    });
 
     app.get("/findCategories", async (req, res) => {
       const tutorials = await tutorialCollection.find().toArray();
