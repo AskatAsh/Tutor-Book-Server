@@ -30,7 +30,18 @@ async function run() {
     // await client.connect();
 
     const tutorialCollection = client.db("tutorBook").collection("tutorials");
+    const bookTutorCollection = client.db("tutorBook").collection("bookedTutors");
 
+    // book a tutor
+    app.post('/bookTutor', async (req, res) => {
+        const bookedTutor = req.body;
+        console.log(bookedTutor);
+        const result = await bookTutorCollection.insertOne(bookedTutor);
+        res.send(result);
+    })
+
+
+    // tutors related api's
     app.get("/findTutorials", async (req, res) => {
       const result = await tutorialCollection.find().toArray();
       res.send(result);
