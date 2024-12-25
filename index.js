@@ -21,7 +21,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -31,23 +31,34 @@ async function run() {
 
     const tutorialCollection = client.db("tutorBook").collection("tutorials");
 
-    app.get('/findTutorials', async (req, res) => {
-        const result = await tutorialCollection.find().toArray();
-        res.send(result);
-    })
+    app.get("/findTutorials", async (req, res) => {
+      const result = await tutorialCollection.find().toArray();
+      res.send(result);
+    });
 
-    app.get('/', (req, res) => {
-        res.send("Tutor Booking Server is Running...");
-    })
+    app.get("/findCategories", async (req, res) => {
+      const tutorials = await tutorialCollection.find().toArray();
+
+      // used set method to filter unique languages
+      const languages = [
+        ...new Set(tutorials.map((tutorial) => tutorial.language)),
+      ];
+      res.send(languages);
+    });
+
+    app.get("/", (req, res) => {
+      res.send("Tutor Booking Server is Running...");
+    });
 
     app.listen(port, () => {
-        console.log("Server is running at port: ", port);
-    })
-
+      console.log("Server is running at port: ", port);
+    });
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
