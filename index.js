@@ -9,7 +9,11 @@ const app = express();
 
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 
 // mongoDB database connection codes
 
@@ -30,18 +34,55 @@ async function run() {
     // await client.connect();
 
     const tutorialCollection = client.db("tutorBook").collection("tutorials");
-    const bookTutorCollection = client.db("tutorBook").collection("bookedTutors");
+    const bookTutorCollection = client
+      .db("tutorBook")
+      .collection("bookedTutors");
 
     // book a tutor
-    app.post('/bookTutor', async (req, res) => {
-        const bookedTutor = req.body;
-        console.log(bookedTutor);
-        const result = await bookTutorCollection.insertOne(bookedTutor);
-        res.send(result);
-    })
+    app.post("/bookTutor", async (req, res) => {
+      const bookedTutor = req.body;
+      console.log(bookedTutor);
+      const result = await bookTutorCollection.insertOne(bookedTutor);
+      res.send(result);
+    });
 
+    // get booked tutors data
+    app.get("/myBookedTutors", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await bookTutorCollection.find(query).toArray();
+      res.send(result);
+    });
 
-    // tutors related api's
+    // add review
+    app.post("/addReview", async (req, res) => {
+      const { id } = req.body;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await tutorialCollection.updateOne(query, {
+        $inc: { review: 1 },
+      });
+
+      if (result.modifiedCount > 0) {
+        const updatedReview = await tutorialCollection.findOne(query, {
+          projection: { review: 1 },
+        });
+
+        res.status(200).send({
+          success: true,
+          message: "Review added successfully!",
+          review: updatedReview.review,
+        });
+      } else {
+        res.status(404).send({
+          success: false,
+          message: "No document found to update!",
+        });
+      }
+      res.send(result);
+    });
+
+    // tutorials related api's
     app.get("/findTutorials", async (req, res) => {
       const result = await tutorialCollection.find().toArray();
       res.send(result);
@@ -65,12 +106,12 @@ async function run() {
     });
 
     // get my tutorials data
-    app.get("/myTutorials", async(req, res) => {
-        const email = req.query.email;
-        const query = {email: email};
-        const result = await tutorialCollection.find(query).toArray();
-        res.send(result);
-    })
+    app.get("/myTutorials", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await tutorialCollection.find(query).toArray();
+      res.send(result);
+    });
 
     app.get("/findCategories", async (req, res) => {
       const tutorials = await tutorialCollection.find().toArray();
