@@ -36,6 +36,15 @@ async function run() {
       res.send(result);
     });
 
+    // get tutors by category
+    app.get("/findTutors/:category", async (req, res) => {
+        const category = req.params.category;
+        query = {language: category};
+        const result = await tutorialCollection.find(query).toArray();
+        console.log(result);
+        res.send(result);
+    })
+
     app.get("/findCategories", async (req, res) => {
       const tutorials = await tutorialCollection.find().toArray();
 
