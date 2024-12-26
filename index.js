@@ -20,6 +20,21 @@ app.use(
   })
 );
 
+const verifyToken = (req, res, next) => {
+  const email = req.query.email;
+  const token = req?.cookies?.jwtToken;
+  if (!token) {
+    return res.status(401).send({ message: "UnAuthorized Access." });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "UnAuthorized Access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 // mongoDB database connection codes
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.fisbs9h.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -60,7 +75,7 @@ async function run() {
     });
 
     app.post("/logout", (req, res) => {
-      // console.log("User Logged Out");
+      console.log("User Logged Out");
       res
         .clearCookie("jwtToken", { ...cookieOptions, maxAge: 0 })
         .send({ success: true });
@@ -76,9 +91,14 @@ async function run() {
     });
 
     // get booked tutors data
-    app.get("/myBookedTutors", async (req, res) => {
+    app.get("/myBookedTutors", verifyToken, async (req, res) => {
       const email = req.query.email;
       const query = { email: email };
+
+      if (req.user?.email !== email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
+
       const result = await bookTutorCollection.find(query).toArray();
       res.send(result);
     });
@@ -187,6 +207,33 @@ async function run() {
       ];
       res.send(languages);
     });
+
+    // get tutorial stats
+    app.get("/stats", async (req, res) => {
+        const tutorials = await tutorialCollection.find().toArray();
+
+        // use set method to calculate and add total
+        let totalReviews = 0;
+        const languagesSet = new Set();
+        const usersSet = new Set();
+
+        tutorials.forEach((tutorial) => {
+          totalReviews += tutorial.review || 0;
+          languagesSet.add(tutorial.language);
+          usersSet.add(tutorial.email);
+        });
+
+        const stats = {
+          totalReviews,
+          numberOfLanguages: languagesSet.size,
+          totalTutorials: tutorials.length,
+          totalUsers: usersSet.size,
+        };
+
+        res.send(stats);
+    });
+
+    // =========X========
 
     app.get("/", (req, res) => {
       res.send("Tutor Booking Server is Running...");
