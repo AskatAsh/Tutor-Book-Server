@@ -79,7 +79,7 @@ async function run() {
           message: "No document found to update!",
         });
       }
-      res.send(result);
+      //   res.send(result);
     });
 
     // tutorials related api's
@@ -110,6 +110,18 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const result = await tutorialCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // update tutorial
+    app.put("/updateTutorial/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateData = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: updateData,
+      };
+      const result = await tutorialCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
