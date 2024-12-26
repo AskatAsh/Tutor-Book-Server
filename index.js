@@ -83,6 +83,15 @@ async function run() {
     });
 
     // tutorials related api's
+
+    // add a tutorial
+    app.post("/addTutorial", async (req, res) => {
+      const tutorial = req.body;
+      console.log(tutorial);
+      const result = await tutorialCollection.insertOne(tutorial);
+      res.send(result);
+    })
+
     app.get("/findTutorials", async (req, res) => {
       const result = await tutorialCollection.find().toArray();
       res.send(result);
