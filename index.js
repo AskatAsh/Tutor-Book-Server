@@ -134,6 +134,14 @@ async function run() {
       res.send(result);
     });
 
+    // delete a tutorial
+    app.delete('/deleteTutorial/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await tutorialCollection.deleteOne(query);
+      res.send(result);
+    })
+
     app.get("/findCategories", async (req, res) => {
       const tutorials = await tutorialCollection.find().toArray();
 
