@@ -87,14 +87,21 @@ async function run() {
     // add a tutorial
     app.post("/addTutorial", async (req, res) => {
       const tutorial = req.body;
-      console.log(tutorial);
       const result = await tutorialCollection.insertOne(tutorial);
       res.send(result);
-    })
+    });
 
     app.get("/findTutorials", async (req, res) => {
-      const result = await tutorialCollection.find().toArray();
-      res.send(result);
+      const category = req.query.category;
+
+      if (category) {
+        const query = { language: category };
+        const result = await tutorialCollection.find(query).toArray();
+        res.send(result);
+      } else {
+        const result = await tutorialCollection.find().toArray();
+        res.send(result);
+      }
     });
 
     // get tutors by category
@@ -135,12 +142,12 @@ async function run() {
     });
 
     // delete a tutorial
-    app.delete('/deleteTutorial/:id', async (req, res) => {
+    app.delete("/deleteTutorial/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await tutorialCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
     app.get("/findCategories", async (req, res) => {
       const tutorials = await tutorialCollection.find().toArray();
