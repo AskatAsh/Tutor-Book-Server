@@ -75,7 +75,7 @@ async function run() {
     });
 
     app.post("/logout", (req, res) => {
-      console.log("User Logged Out");
+      // console.log("User Logged Out");
       res
         .clearCookie("jwtToken", { ...cookieOptions, maxAge: 0 })
         .send({ success: true });
