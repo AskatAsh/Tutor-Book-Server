@@ -11,7 +11,12 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://tutor-books.web.app", "https://tutor-books.firebaseapp.com"]
+    origin: [
+      "http://localhost:5173",
+      "https://tutor-books.web.app",
+      "https://tutor-books.firebaseapp.com",
+    ],
+    credentials: true,
   })
 );
 
@@ -37,6 +42,30 @@ async function run() {
     const bookTutorCollection = client
       .db("tutorBook")
       .collection("bookedTutors");
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    };
+
+    // auth related api's
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "5h",
+      });
+      res.cookie("jwtToken", token, cookieOptions).send({ success: true });
+    });
+
+    app.post("/logout", (req, res) => {
+      // console.log("User Logged Out");
+      res
+        .clearCookie("jwtToken", { ...cookieOptions, maxAge: 0 })
+        .send({ success: true });
+    });
+    // ==========X=========
 
     // book a tutor
     app.post("/bookTutor", async (req, res) => {
