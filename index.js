@@ -67,7 +67,7 @@ async function run() {
     // auth related api's
     app.post("/jwt", (req, res) => {
       const user = req.body;
-      console.log(user);
+      // console.log(user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: "5h",
       });
@@ -85,7 +85,7 @@ async function run() {
     // book a tutor
     app.post("/bookTutor", async (req, res) => {
       const bookedTutor = req.body;
-      console.log(bookedTutor);
+      // console.log(bookedTutor);
       const result = await bookTutorCollection.insertOne(bookedTutor);
       res.send(result);
     });
@@ -106,7 +106,7 @@ async function run() {
     // add review
     app.post("/addReview", async (req, res) => {
       const { id } = req.body;
-      console.log(id);
+      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await tutorialCollection.updateOne(query, {
         $inc: { review: 1 },
@@ -142,15 +142,26 @@ async function run() {
 
     app.get("/findTutorials", async (req, res) => {
       const category = req.query.category;
-
-      if (category) {
-        const query = { language: category };
-        const result = await tutorialCollection.find(query).toArray();
-        res.send(result);
+      const sortBy = req.query.sortBy;
+      // console.log(sortBy);
+      let sortQuery = {};
+      if (sortBy === "low2high") {
+        sortQuery = { price: 1 };
+      } else if (sortBy === "high2low") {
+        sortQuery = { price: -1 };
       } else {
-        const result = await tutorialCollection.find().toArray();
-        res.send(result);
+        sortQuery = {};
       }
+
+      let query = {}
+      if (category) {
+        query = { language: category };
+      } else {
+        query = {};
+      }
+
+      const result = await tutorialCollection.find(query).sort(sortQuery).toArray();
+      res.send(result);
     });
 
     // get tutors by category
@@ -158,7 +169,7 @@ async function run() {
       const category = req.params.category;
       query = { language: category };
       const result = await tutorialCollection.find(query).toArray();
-      console.log(result);
+      // console.log(result);
       res.send(result);
     });
 
@@ -210,27 +221,27 @@ async function run() {
 
     // get tutorial stats
     app.get("/stats", async (req, res) => {
-        const tutorials = await tutorialCollection.find().toArray();
+      const tutorials = await tutorialCollection.find().toArray();
 
-        // use set method to calculate and add total
-        let totalReviews = 0;
-        const languagesSet = new Set();
-        const usersSet = new Set();
+      // use set method to calculate and add total
+      let totalReviews = 0;
+      const languagesSet = new Set();
+      const usersSet = new Set();
 
-        tutorials.forEach((tutorial) => {
-          totalReviews += tutorial.review || 0;
-          languagesSet.add(tutorial.language);
-          usersSet.add(tutorial.email);
-        });
+      tutorials.forEach((tutorial) => {
+        totalReviews += tutorial.review || 0;
+        languagesSet.add(tutorial.language);
+        usersSet.add(tutorial.email);
+      });
 
-        const stats = {
-          totalReviews,
-          numberOfLanguages: languagesSet.size,
-          totalTutorials: tutorials.length,
-          totalUsers: usersSet.size,
-        };
+      const stats = {
+        totalReviews,
+        numberOfLanguages: languagesSet.size,
+        totalTutorials: tutorials.length,
+        totalUsers: usersSet.size,
+      };
 
-        res.send(stats);
+      res.send(stats);
     });
 
     // =========X========
